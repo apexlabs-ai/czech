@@ -2,24 +2,23 @@
 // is governed by a BSD-style license that can be found in the LICENSE file.
 import 'package:mod97/mod97.dart';
 
-bool isCzechBankAccount(final String bankAccountNumber, {withBankCode: true}) {
-  final account = CzechBankAccount.fromString(bankAccountNumber);
-  if(account.accountNumber == null) return false;
-  if(withBankCode) {
-    if(account.bankCode == null) return false;
-  } else {
-    if(account.bankCode != null) return false;
-  }
-  return true;
-}
-
 /**
  * Checks if the [bankAccountNumber] is valid czech bank account number.
  * [String bankAccountNumber] must be in format xxxxx-yyyyyyyyyy/zzzz (prefix and bank code are optional)
  * [bool withBankCode] flag stands for bank code after the slash (/)
  */
-class CzechBankAccount {
+bool isCzechBankAccount(final String bankAccountNumber, {withBankCode: true}) {
+  final account = CzechBankAccount.fromString(bankAccountNumber);
+  if (account.accountNumber == null) return false;
+  if (withBankCode) {
+    if (account.bankCode == null) return false;
+  } else {
+    if (account.bankCode != null) return false;
+  }
+  return true;
+}
 
+class CzechBankAccount {
   final String prefix;
   final String accountNumber;
   final String bankCode;
@@ -27,61 +26,59 @@ class CzechBankAccount {
   final String iban;
   final String bic;
 
-  CzechBankAccount({
-    this.prefix,
-    this.accountNumber,
-    this.bankCode,
-    this.formattedAccount,
-    this.iban,
-    this.bic
-  });
+  CzechBankAccount(
+      {this.prefix,
+      this.accountNumber,
+      this.bankCode,
+      this.formattedAccount,
+      this.iban,
+      this.bic});
 
-  static final _accountRegExp = RegExp(r'^(([0-9]{1,6})\-)?([0-9]{2,10})(/([0-9]{4}))?$');
+  static final _accountRegExp =
+      RegExp(r'^(([0-9]{1,6})\-)?([0-9]{2,10})(/([0-9]{4}))?$');
 
   static CzechBankAccount fromString(final String account) {
-    final m = _accountRegExp.firstMatch(
-        account?.replaceAll(' ', "")?.replaceAll("  ", "") ?? '');
+    final m = _accountRegExp
+        .firstMatch(account?.replaceAll(' ', "")?.replaceAll("  ", "") ?? '');
 
-    if(m == null) return CzechBankAccount();
+    if (m == null) return CzechBankAccount();
 
     final String _prefix = m.group(2);
-    if(_prefix != null && !_isValidNumberStructure(_prefix)) {
+    if (_prefix != null && !_isValidNumberStructure(_prefix)) {
       return CzechBankAccount();
     }
     final String _accountNumber = m.group(3);
-    if(!_isValidNumberStructure(_accountNumber)) {
+    if (!_isValidNumberStructure(_accountNumber)) {
       return CzechBankAccount();
     }
 
     final String _bankCode = m.group(5);
 
-    final String _formattedAccount = (_prefix != null ?
-    (int.tryParse(_prefix).toString() + "-") : "")
-        + (int.tryParse(_accountNumber).toString())
-        + (_bankCode != null ? ('/' + _bankCode)
-            : '');
+    final String _formattedAccount =
+        (_prefix != null ? (int.tryParse(_prefix).toString() + "-") : "") +
+            (int.tryParse(_accountNumber).toString()) +
+            (_bankCode != null ? ('/' + _bankCode) : '');
 
     final String _bic = _bankCode != null ? _bankCodes[_bankCode] : null;
 
     String _iban;
 
     if (_bic != null && _accountNumber != null) {
-      final ib = _bankCode
-          + (_prefix ?? "0").padLeft(6, '0')
-          + _accountNumber.padLeft(10, '0');
+      final ib = _bankCode +
+          (_prefix ?? "0").padLeft(6, '0') +
+          _accountNumber.padLeft(10, '0');
 
       final di = 98 - mod97(ib + "123500");
       _iban = 'CZ' + di.toString().padLeft(2, '0') + ib;
     }
 
     return CzechBankAccount(
-      prefix: _prefix,
-      accountNumber: _accountNumber,
-      bankCode: _bankCode,
-      formattedAccount: _formattedAccount,
-      iban: _iban,
-      bic: _bic
-    );
+        prefix: _prefix,
+        accountNumber: _accountNumber,
+        bankCode: _bankCode,
+        formattedAccount: _formattedAccount,
+        iban: _iban,
+        bic: _bic);
   }
 
   String toString() => formattedAccount;
@@ -106,7 +103,7 @@ class CzechBankAccount {
     return true;
   }
 
-  static final Map <String, String> _bankCodes = {
+  static final Map<String, String> _bankCodes = {
     "0100": "KOMBCZPP",
     "0300": "CEKOCZPP",
     "0600": "AGBACZPP",

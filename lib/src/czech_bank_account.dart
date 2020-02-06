@@ -19,52 +19,51 @@ bool isCzechBankAccount(final String bankAccountNumber, {withBankCode: true}) {
  * [bool withBankCode] flag stands for bank code after the slash (/)
  */
 class CzechBankAccount {
-  String _prefix;
-  String get prefix => _prefix;
 
-  String _accountNumber;
-  String get accountNumber => _accountNumber;
+  final String prefix;
+  final String accountNumber;
+  final String bankCode;
+  final String formattedAccount;
+  final String iban;
+  final String bic;
 
-  String _bankCode;
-  String get bankCode => _bankCode;
+  CzechBankAccount({
+    this.prefix,
+    this.accountNumber,
+    this.bankCode,
+    this.formattedAccount,
+    this.iban,
+    this.bic
+  });
 
-  String _formattedAccount;
-  String get formattedAccount => _formattedAccount;
+  static final _accountRegExp = RegExp(r'^(([0-9]{1,6})\-)?([0-9]{2,10})(/([0-9]{4}))?$');
 
-  String _iban;
-  String get iban => _iban;
-
-  String _bic;
-  get bic => _bic;
-  
-  final _accountRegExp = RegExp(r'^(([0-9]{1,6})\-)?([0-9]{2,10})(/([0-9]{4}))?$');
-
-  CzechBankAccount.fromString(final String account) {
+  static CzechBankAccount fromString(final String account) {
     final m = _accountRegExp.firstMatch(
         account?.replaceAll(' ', "")?.replaceAll("  ", "") ?? '');
 
-    if(m == null) return;
+    if(m == null) return CzechBankAccount();
 
-    _prefix = m.group(2);
+    final String _prefix = m.group(2);
     if(_prefix != null && !_isValidNumberStructure(_prefix)) {
-      _prefix = null;
-      return;
+      return CzechBankAccount();
     }
-    _accountNumber = m.group(3);
+    final String _accountNumber = m.group(3);
     if(!_isValidNumberStructure(_accountNumber)) {
-      _accountNumber = null;
-      return;
+      return CzechBankAccount();
     }
 
-    _bankCode = m.group(5);
+    final String _bankCode = m.group(5);
 
-    _formattedAccount = (_prefix != null ?
+    final String _formattedAccount = (_prefix != null ?
     (int.tryParse(_prefix).toString() + "-") : "")
         + (int.tryParse(_accountNumber).toString())
         + (_bankCode != null ? ('/' + _bankCode)
             : '');
 
-    if (_bankCode != null) _bic = _bankCodes[_bankCode];
+    final String _bic = _bankCode != null ? _bankCodes[_bankCode] : null;
+
+    String _iban;
 
     if (_bic != null && _accountNumber != null) {
       final ib = _bankCode
@@ -74,9 +73,18 @@ class CzechBankAccount {
       final di = 98 - mod97(ib + "123500");
       _iban = 'CZ' + di.toString().padLeft(2, '0') + ib;
     }
+
+    return CzechBankAccount(
+      prefix: _prefix,
+      accountNumber: _accountNumber,
+      bankCode: _bankCode,
+      formattedAccount: _formattedAccount,
+      iban: _iban,
+      bic: _bic
+    );
   }
 
-  String toString() => _formattedAccount;
+//  String toString() => _formattedAccount;
 
   /**
    * [_isValidNumberStructure] implements a Modulus 11-check algorithm with weights used to validate the account number structure.
@@ -84,7 +92,7 @@ class CzechBankAccount {
    *
    * [String number] of prefix or account number
    */
-  bool _isValidNumberStructure(String number) {
+  static bool _isValidNumberStructure(String number) {
     const List<int> weights = const [1, 2, 4, 8, 5, 10, 9, 7, 3, 6];
     int tmp, j, i;
     tmp = j = 0;

@@ -84,7 +84,7 @@ class CzechBankAccount {
     );
   }
 
-//  String toString() => _formattedAccount;
+  String toString() => formattedAccount;
 
   /**
    * [_isValidNumberStructure] implements a Modulus 11-check algorithm with weights used to validate the account number structure.
